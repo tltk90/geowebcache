@@ -36,6 +36,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.geotools.util.logging.Logging;
 import org.geowebcache.GeoWebCacheException;
 import org.geowebcache.io.Resource;
@@ -199,6 +200,12 @@ public class WMSHttpHelper extends WMSSourceHelper {
         tileRespRecv.setStatus(responseCode);
         if (responseCode != 200 && responseCode != 204) {
             tileRespRecv.setError();
+            try {
+                log.fine("Try release connection through an error");
+                EntityUtils.consume(method.getEntity());
+            } catch (IOException ex) {
+                log.log(Level.WARNING, "failed to release connection");
+            }
             throw new ServiceException(
                     "Unexpected response code from backend: "
                             + responseCode
